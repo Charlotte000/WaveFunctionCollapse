@@ -1,3 +1,8 @@
+/**
+ * @file GridTopology.h
+ * @brief GridTopology class for creating topologies with a grid structure.
+ */
+
 #pragma once
 
 #include "Topology.h"

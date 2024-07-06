@@ -1,3 +1,10 @@
+/**
+ * @file Node.h
+ * @brief Node class for the topology.
+ * 
+ * A node is a container for states and the adjacent nodes.
+ */
+
 #pragma once
 
 #include <vector>

@@ -4,10 +4,11 @@ The Wave Function Collapse (WFC) is a C++ implementation designed to facilitate 
 
 ## Key Features
 
+- **Header-Only Library**: The library is header-only, making it easy to integrate into existing projects without the need for additional build steps.
 - **Generic Implementation**: Templated C++ classes allow for flexibility in the types of topologies generated, making it suitable for a wide range of applications.
+- **State weighting**: The library supports state weighting, allowing users to bias the selection of states.
 - **Customizable Constraints**: Users can define custom compatibility rules and weights for nodes, offering control over the generation process to achieve desired outcomes.
 - **Error Handling**: Provides robust error handling to manage situations where the algorithm cannot find a valid solution under the given constraints.
-- **Header-Only Library**: The library is header-only, making it easy to integrate into existing projects without the need for additional build steps.
 - **Grid Topology Helpers**: Includes `GridTopology.h`, a set of helper functions designed to simplify the creation of grid-based topologies. It supports the creation of topologies based on tokens, adjacent states, and custom rules (functions), enhancing the library's utility for common procedural generation tasks.
 
 ## Getting Started

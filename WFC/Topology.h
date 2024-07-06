@@ -1,3 +1,10 @@
+/**
+ * @file Topology.h
+ * @brief Topology class for the Wave Function Collapse algorithm.
+ * 
+ * The topology is a container for nodes and weights.
+ */
+
 #pragma once
 
 #include "Node.h"
