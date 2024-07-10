@@ -22,15 +22,33 @@
  * 
  * The topology is a container for nodes and weights.
  * 
- * @tparam T The type of the states.
+ * @tparam State The type of the states.
  */
-template <class T>
+template <class State>
 class Topology
 {
 public:
-    std::vector<Node<T>> nodes;
-    std::map<T, float> weights;
-    std::function<bool(const Node<T>&, const T&, const Node<T>&, const T&)> compatible;
+    /**
+     * @brief Nodes are elements of the topology.
+     */
+    std::vector<Node<State>> nodes;
+
+    /**
+     * @brief Weights are used to bias the selection of states.
+     */
+    std::map<State, float> weights;
+
+    /**
+     * @brief The compatible function is used to check if two states are compatible.
+     * 
+     * This function has to be defined by the user and should be symmetric ( compatible(a, b) == compatible(b, a) ).
+     * @param a The first node.
+     * @param aState The state of the first node.
+     * @param b The second node.
+     * @param bState The state of the second node.
+     * @return True if the states are compatible, false otherwise.
+     */
+    std::function<bool(const Node<State>&, const State&, const Node<State>&, const State&)> compatible;
 
     /**
      * @brief Collapse the topology using the Wave Function Collapse algorithm.
@@ -45,7 +63,7 @@ public:
      * @param state The state to collapse the node with.
      * @throw std::logic_error If the state is not valid.
      */
-    void collapseNode(Node<T>& node, const T& state);
+    void collapseNode(Node<State>& node, const State& state);
 
     /**
      * @brief Check if the topology is correct.
@@ -54,32 +72,32 @@ public:
      * 
      * @return True if the topology is correct, false otherwise.
      */
-    bool isCorrect();
+    bool isCorrect() const;
 private:
-    bool isCollapsed();
-    Node<T>* getMinEntropy(std::mt19937& randGen);
-    void propagate(Node<T>& node);
-    bool reduceStates(Node<T>& a);
-    T getState(const Node<T>& node, std::mt19937& randGen);
-    bool isPlaceable(const Node<T>& node, const T& state);
+    bool isCollapsed() const;
+    Node<State>* getMinEntropy(std::mt19937& randGen);
+    void propagate(Node<State>& node);
+    bool reduceStates(Node<State>& a);
+    State getState(const Node<State>& node, std::mt19937& randGen) const;
+    bool isPlaceable(const Node<State>& node, const State& state) const;
 };
 
-template <class T>
-void Topology<T>::collapse(unsigned int seed)
+template <class State>
+void Topology<State>::collapse(unsigned int seed)
 {
     std::mt19937 randGen(seed);
     while (!this->isCollapsed())
     {
-        Node<T>* node = this->getMinEntropy(randGen);
-        T state = this->getState(*node, randGen);
+        Node<State>* node = this->getMinEntropy(randGen);
+        State state = this->getState(*node, randGen);
         this->collapseNode(*node, state);
     }
 }
 
-template <class T>
-void Topology<T>::collapseNode(Node<T>& node, const T& state)
+template <class State>
+void Topology<State>::collapseNode(Node<State>& node, const State& state)
 {
-    auto it = std::find_if(node.states.begin(), node.states.end(), [&state](T& n) { return n == state; });
+    auto it = std::find_if(node.states.begin(), node.states.end(), [&state](State& n) { return n == state; });
     if (it == node.states.end())
     {
         throw std::logic_error("Invalid state to collapse");
@@ -89,33 +107,33 @@ void Topology<T>::collapseNode(Node<T>& node, const T& state)
     this->propagate(node);
 }
 
-template <class T>
-bool Topology<T>::isCorrect()
+template <class State>
+bool Topology<State>::isCorrect() const
 {
     return std::all_of(
         this->nodes.begin(),
         this->nodes.end(),
-        [this](const Node<T>& a)
+        [this](const Node<State>& a)
         {
             return a.states.size() == 1 &&
                 std::all_of(
                     a.adjacent.begin(),
                     a.adjacent.end(),
-                    [this, &a](const Node<T>* b)
+                    [this, &a](const Node<State>* b)
                     {
                         return b == nullptr || b->states.size() == 1 && this->compatible(a, a.states.at(0), *b, b->states.at(0));
                     });
         });
 }
 
-template <class T>
-bool Topology<T>::isCollapsed()
+template <class State>
+bool Topology<State>::isCollapsed() const
 {
-    return std::all_of(this->nodes.begin(), this->nodes.end(), [](const Node<T>& node) { return node.states.size() == 1; });
+    return std::all_of(this->nodes.begin(), this->nodes.end(), [](const Node<State>& node) { return node.states.size() == 1; });
 }
 
-template <class T>
-Node<T>* Topology<T>::getMinEntropy(std::mt19937& randGen)
+template <class State>
+Node<State>* Topology<State>::getMinEntropy(std::mt19937& randGen)
 {
     size_t minEntropy = -1;
     for (size_t i = 0; i < this->nodes.size(); i++)
@@ -127,8 +145,8 @@ Node<T>* Topology<T>::getMinEntropy(std::mt19937& randGen)
         }
     }
 
-    std::vector<Node<T>*> minNodes;
-    for (Node<T>& node : this->nodes)
+    std::vector<Node<State>*> minNodes;
+    for (Node<State>& node : this->nodes)
     {
         if (node.states.size() == minEntropy)
         {
@@ -139,20 +157,20 @@ Node<T>* Topology<T>::getMinEntropy(std::mt19937& randGen)
     return minNodes[randGen() % minNodes.size()];
 }
 
-template <class T>
-void Topology<T>::propagate(Node<T>& node)
+template <class State>
+void Topology<State>::propagate(Node<State>& node)
 {
-    std::queue<Node<T>*> queue;
-    std::vector<Node<T>*> visited;
+    std::queue<Node<State>*> queue;
+    std::vector<Node<State>*> visited;
 
     queue.push(&node);
     visited.push_back(&node);
     while (!queue.empty())
     {
-        Node<T>* current = queue.front();
+        Node<State>* current = queue.front();
         queue.pop();
 
-        for (Node<T>* neighbour : current->adjacent)
+        for (Node<State>* neighbour : current->adjacent)
         {
             if (neighbour != nullptr &&
                 std::find(visited.begin(), visited.end(), neighbour) == visited.end() &&
@@ -165,15 +183,15 @@ void Topology<T>::propagate(Node<T>& node)
     }
 }
 
-template <class T>
-bool Topology<T>::reduceStates(Node<T>& a)
+template <class State>
+bool Topology<State>::reduceStates(Node<State>& a)
 {
-    std::vector<T> newStates;
+    std::vector<State> newStates;
     std::copy_if(
         a.states.begin(),
         a.states.end(),
         std::back_inserter(newStates),
-        [this, &a](const T& aState) { return this->isPlaceable(a, aState); });
+        [this, &a](const State& aState) { return this->isPlaceable(a, aState); });
 
     bool changed = newStates.size() != a.states.size();
     a.states = newStates;
@@ -185,14 +203,14 @@ bool Topology<T>::reduceStates(Node<T>& a)
     return changed;
 }
 
-template <class T>
-T Topology<T>::getState(const Node<T>& a, std::mt19937& randGen)
+template <class State>
+State Topology<State>::getState(const Node<State>& a, std::mt19937& randGen) const
 {
-    std::vector<T> aStates;
+    std::vector<State> aStates;
     std::vector<double> aWeights;
-    for (const T& aState : a.states)
+    for (const State& aState : a.states)
     {
-        float aWeight = this->weights.find(aState) != this->weights.end() ? this->weights[aState] : 1;
+        float aWeight = this->weights.find(aState) != this->weights.end() ? this->weights.at(aState) : 1;
         if (aWeight > 0 && this->isPlaceable(a, aState))
         {
             aStates.push_back(aState);
@@ -209,19 +227,19 @@ T Topology<T>::getState(const Node<T>& a, std::mt19937& randGen)
     return aStates[randState(randGen)];
 }
 
-template <class T>
-bool Topology<T>::isPlaceable(const Node<T>& node, const T& state)
+template <class State>
+bool Topology<State>::isPlaceable(const Node<State>& node, const State& state) const
 {
     return std::all_of(
         node.adjacent.begin(),
         node.adjacent.end(),
-        [this, &node, &state](const Node<T>* adjacent)
+        [this, &node, &state](const Node<State>* adjacent)
         {
             return adjacent == nullptr ||
                 std::any_of(
                     adjacent->states.begin(),
                     adjacent->states.end(),
-                    [this, &node, adjacent, &state](const T& adjacentState)
+                    [this, &node, adjacent, &state](const State& adjacentState)
                     {
                         return this->compatible(node, state, *adjacent, adjacentState);
                     });

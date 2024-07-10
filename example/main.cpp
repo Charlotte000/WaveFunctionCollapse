@@ -6,10 +6,10 @@ void examplePipes()
 {
     Topology<char> topology = Pipes::create(150, 10);
     topology.weights[' '] = 10;
-    topology.weights[char(0xC1)] = 0;
-    topology.weights[char(0xC2)] = 0;
-    topology.weights[char(0xC3)] = 0;
-    topology.weights[char(0xB4)] = 0;
+    topology.weights[char(180)] = 0;
+    topology.weights[char(193)] = 0;
+    topology.weights[char(194)] = 0;
+    topology.weights[char(195)] = 0;
 
     topology.collapse();
     Pipes::print(topology, 150, 10);

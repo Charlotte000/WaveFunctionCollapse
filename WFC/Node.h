@@ -14,11 +14,18 @@
  * 
  * A node is a container for states and the adjacent nodes.
  * 
- * @tparam T The type of the states.
+ * @tparam State The type of the states.
  */
-template <class T>
+template <class State>
 struct Node
 {
-    std::vector<T> states;
-    std::vector<Node*> adjacent;
+    /**
+     * @brief All possible states of the node. 
+     */
+    std::vector<State> states;
+
+    /**
+     * @brief The adjacent nodes are the nodes that are connected to the current node.
+     */
+    std::vector<Node<State>*> adjacent;
 };

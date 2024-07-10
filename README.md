@@ -1,9 +1,7 @@
 # Wave Function Collapse (WFC)
-
 The Wave Function Collapse (WFC) is a C++ implementation designed to facilitate the procedural generation of topologies using the Wave Function Collapse algorithm. This library is particularly suited for applications in procedural content generation, such as game level design, architectural modeling, and texture generation, where the goal is to create complex, varied, and interesting patterns and structures from simple rules and inputs.
 
 ## Key Features
-
 - **Header-Only Library**: The library is header-only, making it easy to integrate into existing projects without the need for additional build steps.
 - **Generic Implementation**: Templated C++ classes allow for flexibility in the types of topologies generated, making it suitable for a wide range of applications.
 - **State weighting**: The library supports state weighting, allowing users to bias the selection of states.
@@ -20,11 +18,9 @@ To use the Wave Function Collapse library in your project, simply copy the `WFC`
 There is an example usage of the library in the `example` directory. The example includes a simple 2D grid-based topology generation and a sudoku solver using the Wave Function Collapse algorithm.
 
 #### Pipes
-
 ![](imgs/pipes.png)
 
 #### Sudoku
-
 ![](imgs/sudoku.png)
 
 ## Dependencies
