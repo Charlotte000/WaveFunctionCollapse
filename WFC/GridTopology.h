@@ -130,16 +130,17 @@ template <size_t Dim>
 std::array<size_t, Dim> GridTopology<Dim>::getCoord(size_t index, const std::array<size_t, Dim>& size)
 {
     std::array<size_t, Dim> coords;
-    size_t accum = std::reduce(size.begin(), size.end(), 1, std::multiplies<size_t>()) / size[Dim - 1];
+    std::transform(
+        size.begin(),
+        size.end(),
+        coords.begin(),
+        [&index](size_t d)
+        {
+            size_t coord = index % d;
+            index /= d;
+            return coord;
+        });
 
-    for (size_t a = Dim - 1; a > 0; a--)
-    {
-        coords[a] = index / accum;
-        index -= coords[a] * accum;
-        accum /= size[a - 1];
-    }
-
-    coords[0] = index;
     return coords;
 }
 
