@@ -16,14 +16,14 @@ Topology<int> Sudoku::create()
 
         topology.nodes[i].states = states;
 
-        // Horizontal
+        // Horizontal line
         for (size_t xx = 0; xx < 9; xx++)
         {
             if (xx == x) continue;
             topology.nodes[i].adjacent.push_back(&topology.nodes[Sudoku::getIndex(xx, y)]);
         }
 
-        // Vertical
+        // Vertical line
         for (size_t yy = 0; yy < 9; yy++)
         {
             if (yy == y) continue;
@@ -71,8 +71,8 @@ void Sudoku::print(const Topology<int>& topology)
             std::cout << char(0xC4) << char(0xC4) << char(0xC4);
             std::cout << char(0xB4);
             std::cout << std::endl;
-
         }
+
         for (size_t x = 0; x < 9; x++)
         {
             if (x % 3 == 0) std::cout << char(0xB3);
