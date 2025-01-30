@@ -17,6 +17,9 @@
 #include <stdexcept>
 #include <functional>
 
+namespace WFC
+{
+
 /**
  * @brief Topology class for the Wave Function Collapse algorithm.
  * 
@@ -160,11 +163,9 @@ Node<State>* Topology<State>::getMinEntropy(std::mt19937& randGen)
 template <class State>
 void Topology<State>::propagate(Node<State>& node)
 {
-    std::queue<Node<State>*> queue;
-    std::vector<Node<State>*> visited;
-
-    queue.push(&node);
-    visited.push_back(&node);
+    std::queue<Node<State>*> queue({ &node });
+    std::vector<Node<State>*> visited({ &node });
+    visited.reserve(this->nodes.size());
     while (!queue.empty())
     {
         Node<State>* current = queue.front();
@@ -244,4 +245,6 @@ bool Topology<State>::isPlaceable(const Node<State>& node, const State& state) c
                         return this->compatible(node, state, *adjacent, adjacentState);
                     });
         });
+}
+
 }

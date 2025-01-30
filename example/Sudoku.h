@@ -4,13 +4,15 @@
 
 #include <array>
 
-class Sudoku
+namespace Sudoku
 {
-public:
-    static Topology<int> create();
-    static void print(const Topology<int>& topology);
-    static size_t getIndex(size_t x, size_t y);
-    static std::array<size_t, 2> getCoord(size_t index);
-private:
-    Sudoku() {}
-};
+
+WFC::Topology<int> create();
+
+void print(const WFC::Topology<int>& topology);
+
+size_t getIndex(size_t x, size_t y);
+
+std::array<size_t, 2> getCoord(size_t index);
+
+}

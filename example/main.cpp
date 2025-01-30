@@ -4,7 +4,7 @@
 
 void examplePipes()
 {
-    Topology<char> topology = Pipes::create(150, 10);
+    WFC::Topology<char> topology = Pipes::create(150, 10);
     topology.weights[' '] = 10;
     topology.weights[char(180)] = 0;
     topology.weights[char(193)] = 0;
@@ -21,7 +21,7 @@ void exampleSudoku()
     {
         try
         {
-            Topology<int> topology = Sudoku::create();
+            WFC::Topology<int> topology = Sudoku::create();
             topology.collapse();
             Sudoku::print(topology);
             break;

@@ -4,11 +4,11 @@
 #include <vector>
 #include <iostream>
 
-Topology<int> Sudoku::create()
+WFC::Topology<int> Sudoku::create()
 {
     std::vector<int> states = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-    Topology<int> topology;
-    topology.nodes = std::vector<Node<int>>(81);
+    WFC::Topology<int> topology;
+    topology.nodes = std::vector<WFC::Node<int>>(81);
 
     for (size_t i = 0; i < topology.nodes.size(); i++)
     {
@@ -41,11 +41,11 @@ Topology<int> Sudoku::create()
         }
     }
 
-    topology.compatible = [](const Node<int>&, const int& aState, const Node<int>&, const int& bState) { return aState != bState; };
+    topology.compatible = [](const WFC::Node<int>&, const int& aState, const WFC::Node<int>&, const int& bState) { return aState != bState; };
     return topology;
 }
 
-void Sudoku::print(const Topology<int>& topology)
+void Sudoku::print(const WFC::Topology<int>& topology)
 {
     for (size_t y = 0; y < 9; y++)
     {
@@ -77,7 +77,7 @@ void Sudoku::print(const Topology<int>& topology)
         {
             if (x % 3 == 0) std::cout << char(0xB3);
 
-            Node node = topology.nodes[Sudoku::getIndex(x, y)];
+            WFC::Node node = topology.nodes[Sudoku::getIndex(x, y)];
             if (node.states.size() == 1)
             {
                 std::cout << node.states[0];

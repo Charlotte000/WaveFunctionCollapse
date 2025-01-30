@@ -9,6 +9,9 @@
 
 #include <vector>
 
+namespace WFC
+{
+
 /**
  * @brief Node class for the topology.
  * 
@@ -29,3 +32,5 @@ struct Node
      */
     std::vector<Node<State>*> adjacent;
 };
+
+}
