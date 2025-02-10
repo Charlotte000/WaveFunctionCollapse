@@ -24,4 +24,4 @@ There is an example usage of the library in the `example` directory. The example
 ![](imgs/sudoku.png)
 
 ## Dependencies
-The library has no external dependencies and is written in standard C++.
+The library has no external dependencies and is written in standard C++ 17.

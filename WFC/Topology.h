@@ -4,21 +4,41 @@
  * 
  * The topology is a container for nodes and weights.
  */
-
 #pragma once
-
-#include "Node.h"
 
 #include <map>
 #include <queue>
 #include <time.h>
+#include <vector>
 #include <random>
 #include <vector>
+#include <algorithm>
 #include <stdexcept>
 #include <functional>
 
 namespace WFC
 {
+
+/**
+ * @brief Node class for the topology.
+ * 
+ * A node is a container for states and the adjacent nodes.
+ * 
+ * @tparam State The type of the states.
+ */
+template <class State>
+struct Node
+{
+    /**
+     * @brief All possible states of the node. 
+     */
+    std::vector<State> states;
+
+    /**
+     * @brief The adjacent nodes are the nodes that are connected to the current node.
+     */
+    std::vector<Node<State>*> adjacent;
+};
 
 /**
  * @brief Topology class for the Wave Function Collapse algorithm.
@@ -53,6 +73,10 @@ public:
      */
     std::function<bool(const Node<State>&, const State&, const Node<State>&, const State&)> compatible;
 
+    Topology() = default;
+
+    Topology(const Topology<State>& topology);
+
     /**
      * @brief Collapse the topology using the Wave Function Collapse algorithm.
      * @param seed The seed for the random number generator.
@@ -86,6 +110,22 @@ private:
 };
 
 template <class State>
+Topology<State>::Topology(const Topology<State>& topology)
+{
+    this->nodes = topology.nodes;
+    for (Node<State>& node : this->nodes)
+    {
+        for (Node<State>*& adj : node.adjacent)
+        {
+            adj = adj == nullptr ? nullptr : &this->nodes[adj - topology.nodes.data()];
+        }
+    }
+
+    this->weights = topology.weights;
+    this->compatible = topology.compatible;
+}
+
+template <class State>
 void Topology<State>::collapse(unsigned int seed)
 {
     std::mt19937 randGen(seed);
@@ -100,7 +140,7 @@ void Topology<State>::collapse(unsigned int seed)
 template <class State>
 void Topology<State>::collapseNode(Node<State>& node, const State& state)
 {
-    auto it = std::find_if(node.states.begin(), node.states.end(), [&state](State& n) { return n == state; });
+    auto it = std::find(node.states.begin(), node.states.end(), state);
     if (it == node.states.end())
     {
         throw std::logic_error("Invalid state to collapse");
