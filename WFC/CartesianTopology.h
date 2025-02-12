@@ -79,6 +79,13 @@ public:
     Node<State>& getNode(const Vec<Dim>& coord);
 
     /**
+     * @brief Get the node with a specific coordinate.
+     * @param coord The coordinate of the node.
+     * @return The node.
+     */
+    const Node<State>& getNode(const Vec<Dim>& coord) const;
+
+    /**
      * @brief Get the index of a node with a specific coordinate.
      * @param coord The coordinate of the node.
      * @return The index of the node.
@@ -201,6 +208,12 @@ CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std
 
 template <size_t Dim, class State>
 Node<State>& CartesianTopology<Dim, State>::getNode(const Vec<Dim>& coord)
+{
+    return this->nodes[this->getIndex(coord)];
+}
+
+template <size_t Dim, class State>
+const Node<State>& CartesianTopology<Dim, State>::getNode(const Vec<Dim>& coord) const
 {
     return this->nodes[this->getIndex(coord)];
 }
