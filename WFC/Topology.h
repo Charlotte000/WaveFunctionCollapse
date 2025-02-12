@@ -105,7 +105,7 @@ private:
     Node<State>* getMinEntropy(std::mt19937& randGen);
     void propagate(Node<State>& node);
     bool reduceStates(Node<State>& a);
-    State getState(const Node<State>& node, std::mt19937& randGen) const;
+    State* getState(Node<State>& node, std::mt19937& randGen) const;
     bool isPlaceable(const Node<State>& node, const State& state) const;
 };
 
@@ -132,8 +132,8 @@ void Topology<State>::collapse(unsigned int seed)
     while (!this->isCollapsed())
     {
         Node<State>* node = this->getMinEntropy(randGen);
-        State state = this->getState(*node, randGen);
-        this->collapseNode(*node, state);
+        State* state = this->getState(*node, randGen);
+        this->collapseNode(*node, *state);
     }
 }
 
@@ -245,16 +245,16 @@ bool Topology<State>::reduceStates(Node<State>& a)
 }
 
 template <class State>
-State Topology<State>::getState(const Node<State>& a, std::mt19937& randGen) const
+State* Topology<State>::getState(Node<State>& a, std::mt19937& randGen) const
 {
-    std::vector<State> aStates;
+    std::vector<State*> aStates;
     std::vector<double> aWeights;
-    for (const State& aState : a.states)
+    for (State& aState : a.states)
     {
         float aWeight = this->weights.find(aState) != this->weights.end() ? this->weights.at(aState) : 1;
         if (aWeight > 0 && this->isPlaceable(a, aState))
         {
-            aStates.push_back(aState);
+            aStates.push_back(&aState);
             aWeights.push_back(aWeight);
         }
     }
