@@ -33,13 +33,14 @@ public:
      * @brief Create a cartesian topology with a specific size, states and weights.
      * 
      * If the weights are not specified, the default weight is 1.
+     * Compatible function is true for all states.
      * 
      * @param size The size of the grid.
      * @param states The states of the nodes.
      * @param periods Whether the grid is periodic (true) or not (false) in each dimension.
      * @param weights The weights of the states.
      */
-    CartesianTopology(const Vec<Dim>& size, const std::vector<State>& states, const std::array<bool, Dim>& periods = {}, const std::map<State, float>& weights = {});
+    CartesianTopology(const Vec<Dim>& size, const std::vector<State>& states, const std::array<bool, Dim>& periods = {}, const std::unordered_map<State, float>& weights = {});
 
     /**
      * @brief Create a cartesian topology with a specific size, adjacent states and weights.
@@ -52,9 +53,17 @@ public:
      * @param periods Whether the grid is periodic (true) or not (false) in each dimension.
      * @param weights The weights of the states.
      */
-    CartesianTopology(const Vec<Dim>& size, const std::map<State, std::array<std::vector<State>, Dim * 2>>& adjacent, const std::array<bool, Dim>& periods = {}, const std::map<State, float>& weights = {});
+    CartesianTopology(const Vec<Dim>& size, const std::unordered_map<State, std::array<std::vector<State>, Dim * 2>>& adjacent, const std::array<bool, Dim>& periods = {}, const std::unordered_map<State, float>& weights = {});
 
-    CartesianTopology(const Vec<Dim>& size, const std::vector<State>& states, const std::array<std::function<bool(const State& a, const State& b)>, Dim>& rules, const std::array<bool, Dim>& periods = {}, const std::map<State, float>& weights = {});
+    /**
+     * @brief Create a cartesian topology with a specific size, states, rules and weights.
+     * @param size The size of the grid.
+     * @param states The states of the nodes.
+     * @param rules The rules for the compatibility of the states. The rule defines the compatibility of the states in the corresponding direction (negative and positive). Example: (left, right), (up, down).
+     * @param periods Whether the grid is periodic (true) or not (false) in each dimension.
+     * @param weights The weights of the states.
+     */
+    CartesianTopology(const Vec<Dim>& size, const std::vector<State>& states, const std::array<std::function<bool(const State& a, const State& b)>, Dim>& rules, const std::array<bool, Dim>& periods = {}, const std::unordered_map<State, float>& weights = {});
 
     /**
      * @brief Create a cartesian topology with a specific size, tokens and weights.
@@ -69,7 +78,7 @@ public:
      * @param weights The weights of the states.
      */
     template <class Token>
-    CartesianTopology(const Vec<Dim>& size, const std::map<State, std::array<std::vector<Token>, Dim * 2>>& tokens, const std::array<bool, Dim>& periods = {}, const std::map<State, float>& weights = {});
+    CartesianTopology(const Vec<Dim>& size, const std::unordered_map<State, std::array<std::vector<Token>, Dim * 2>>& tokens, const std::array<bool, Dim>& periods = {}, const std::unordered_map<State, float>& weights = {});
 
     /**
      * @brief Get the node with a specific coordinate.
@@ -102,16 +111,16 @@ public:
 };
 
 template <class Key, class Value>
-std::vector<Key> __getKeys(const std::map<Key, Value>& map)
+std::vector<Key> __getKeys(const std::unordered_map<Key, Value>& map)
 {
     std::vector<Key> keys;
     keys.reserve(map.size());
-    std::transform(map.begin(), map.end(), std::back_inserter(keys), [](const auto& kv) { return kv.first; });
+    std::transform(map.begin(), map.end(), std::back_inserter(keys), [](const auto& kv) -> Key { return kv.first; });
     return keys;
 }
 
 template <size_t Dim, class State>
-CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std::vector<State>& states, const std::array<bool, Dim>& periods, const std::map<State, float>& weights)
+CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std::vector<State>& states, const std::array<bool, Dim>& periods, const std::unordered_map<State, float>& weights)
     : size(size)
 {
     this->nodes = std::vector<Node<State>>(std::reduce(size.begin(), size.end(), 1, std::multiplies<size_t>()));
@@ -133,14 +142,14 @@ CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std
         }
     }
 
-    this->compatible = [](const Node<State>&, const State&, const Node<State>&, const State&) { return true; };
+    this->compatible = [](const Node<State>&, const State&, const Node<State>&, const State&) -> bool { return true; };
 }
 
 template <size_t Dim, class State>
-CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std::map<State, std::array<std::vector<State>, Dim * 2>>& adjacent, const std::array<bool, Dim>& periods, const std::map<State, float>& weights)
+CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std::unordered_map<State, std::array<std::vector<State>, Dim * 2>>& adjacent, const std::array<bool, Dim>& periods, const std::unordered_map<State, float>& weights)
     : CartesianTopology(size, __getKeys(adjacent), periods, weights)
 {
-    this->compatible = [adjacent](const Node<State>& a, const State& aState, const Node<State>& b, const State& bState)
+    this->compatible = [adjacent](const Node<State>& a, const State& aState, const Node<State>& b, const State& bState) -> bool
     {
         for (size_t i = 0; i < Dim * 2; i++)
         {
@@ -159,10 +168,10 @@ CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std
 }
 
 template <size_t Dim, class State>
-CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std::vector<State>& states, const std::array<std::function<bool(const State& a, const State& b)>, Dim>& rules, const std::array<bool, Dim>& periods, const std::map<State, float>& weights)
+CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std::vector<State>& states, const std::array<std::function<bool(const State& a, const State& b)>, Dim>& rules, const std::array<bool, Dim>& periods, const std::unordered_map<State, float>& weights)
     : CartesianTopology(size, states, periods, weights)
 {
-    this->compatible = [rules](const Node<State>& a, const State& aState, const Node<State>& b, const State& bState)
+    this->compatible = [rules](const Node<State>& a, const State& aState, const Node<State>& b, const State& bState) -> bool
     {
         for (size_t i = 0; i < Dim * 2; i++)
         {
@@ -179,10 +188,10 @@ CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std
 
 template <size_t Dim, class State>
 template <class Token>
-CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std::map<State, std::array<std::vector<Token>, Dim * 2>>& tokens, const std::array<bool, Dim>& periods, const std::map<State, float>& weights)
+CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std::unordered_map<State, std::array<std::vector<Token>, Dim * 2>>& tokens, const std::array<bool, Dim>& periods, const std::unordered_map<State, float>& weights)
     : CartesianTopology(size, __getKeys(tokens), periods, weights)
 {
-    this->compatible = [tokens](const Node<State>& a, const State& aState, const Node<State>& b, const State& bState)
+    this->compatible = [tokens](const Node<State>& a, const State& aState, const Node<State>& b, const State& bState) -> bool
     {
         for (size_t i = 0; i < Dim * 2; i++)
         {
@@ -191,11 +200,11 @@ CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std
             {
                 const std::vector<Token>& availableA = tokens.at(aState)[i];
                 const std::vector<Token>& availableB = tokens.at(bState)[j];
-                return std::any_of(availableB.begin(), availableB.end(), [&availableA](const Token& b)
+                return std::any_of(availableB.begin(), availableB.end(), [&availableA](const Token& b) -> bool
                 {
                     return std::find(availableA.begin(), availableA.end(), b) != availableA.end();
                 }) &&
-                std::any_of(availableA.begin(), availableA.end(), [&availableB](const Token& a)
+                std::any_of(availableA.begin(), availableA.end(), [&availableB](const Token& a) -> bool
                 {
                     return std::find(availableB.begin(), availableB.end(), a) != availableB.end();
                 });
@@ -228,7 +237,7 @@ size_t CartesianTopology<Dim, State>::getIndex(const Vec<Dim>& coord) const
         this->size.begin(),
         0,
         std::plus<size_t>(),
-        [&accum](size_t coord_val, size_t size_val)
+        [&accum](size_t coord_val, size_t size_val) -> size_t
         {
             size_t result = coord_val * accum;
             accum *= size_val;
@@ -244,7 +253,7 @@ Vec<Dim> CartesianTopology<Dim, State>::getCoord(size_t index) const
         this->size.begin(),
         this->size.end(),
         coords.begin(),
-        [&index](size_t d)
+        [&index](size_t d) -> size_t
         {
             size_t coord = index % d;
             index /= d;

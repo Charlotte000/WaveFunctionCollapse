@@ -6,7 +6,6 @@
  */
 #pragma once
 
-#include <map>
 #include <queue>
 #include <time.h>
 #include <vector>
@@ -15,6 +14,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <functional>
+#include <unordered_map>
 
 namespace WFC
 {
@@ -44,6 +44,7 @@ struct Node
  * @brief Topology class for the Wave Function Collapse algorithm.
  * 
  * The topology is a container for nodes and weights.
+ * State must be hashable and comparable ( define operator== and std::hash<State> ).
  * 
  * @tparam State The type of the states.
  */
@@ -59,7 +60,7 @@ public:
     /**
      * @brief Weights are used to bias the selection of states.
      */
-    std::map<State, float> weights;
+    std::unordered_map<State, float> weights;
 
     /**
      * @brief The compatible function is used to check if two states are compatible.
@@ -156,13 +157,13 @@ bool Topology<State>::isCorrect() const
     return std::all_of(
         this->nodes.begin(),
         this->nodes.end(),
-        [this](const Node<State>& a)
+        [this](const Node<State>& a) -> bool
         {
             return a.states.size() == 1 &&
                 std::all_of(
                     a.adjacent.begin(),
                     a.adjacent.end(),
-                    [this, &a](const Node<State>* b)
+                    [this, &a](const Node<State>* b) -> bool
                     {
                         return b == nullptr || b->states.size() == 1 && this->compatible(a, a.states.at(0), *b, b->states.at(0));
                     });
@@ -172,7 +173,7 @@ bool Topology<State>::isCorrect() const
 template <class State>
 bool Topology<State>::isCollapsed() const
 {
-    return std::all_of(this->nodes.begin(), this->nodes.end(), [](const Node<State>& node) { return node.states.size() == 1; });
+    return std::all_of(this->nodes.begin(), this->nodes.end(), [](const Node<State>& node) -> bool { return node.states.size() == 1; });
 }
 
 template <class State>
@@ -232,7 +233,7 @@ bool Topology<State>::reduceStates(Node<State>& a)
         a.states.begin(),
         a.states.end(),
         std::back_inserter(newStates),
-        [this, &a](const State& aState) { return this->isPlaceable(a, aState); });
+        [this, &a](const State& aState) -> bool { return this->isPlaceable(a, aState); });
 
     bool changed = newStates.size() != a.states.size();
     a.states = newStates;
@@ -274,13 +275,13 @@ bool Topology<State>::isPlaceable(const Node<State>& node, const State& state) c
     return std::all_of(
         node.adjacent.begin(),
         node.adjacent.end(),
-        [this, &node, &state](const Node<State>* adjacent)
+        [this, &node, &state](const Node<State>* adjacent) -> bool
         {
             return adjacent == nullptr ||
                 std::any_of(
                     adjacent->states.begin(),
                     adjacent->states.end(),
-                    [this, &node, adjacent, &state](const State& adjacentState)
+                    [this, &node, adjacent, &state](const State& adjacentState) -> bool
                     {
                         return this->compatible(node, state, *adjacent, adjacentState);
                     });
