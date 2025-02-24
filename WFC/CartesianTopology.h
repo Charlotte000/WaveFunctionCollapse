@@ -123,12 +123,12 @@ template <size_t Dim, class State>
 CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std::vector<State>& states, const std::array<bool, Dim>& periods, const std::unordered_map<State, float>& weights)
     : size(size)
 {
-    this->nodes = std::vector<Node<State>>(std::reduce(size.begin(), size.end(), 1, std::multiplies<size_t>()));
+    this->nodes = std::vector<Node<State>>(std::reduce(size.begin(), size.end(), (size_t)1, std::multiplies<size_t>()));
     this->weights = weights;
 
     for (size_t i = 0; i < this->nodes.size(); i++)
     {
-        Vec<Dim> coords = this->getCoord(i);
+        const Vec<Dim> coords = this->getCoord(i);
 
         this->nodes[i].states = states;
         this->nodes[i].adjacent = std::vector<Node<State>*>(Dim * 2);
@@ -153,7 +153,7 @@ CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std
     {
         for (size_t i = 0; i < Dim * 2; i++)
         {
-            size_t j = i ^ 1;
+            const size_t j = i ^ 1;
             if (a.adjacent[i] == &b && b.adjacent[j] == &a)
             {
                 const std::vector<State>& availableA = adjacent.at(aState)[i];
@@ -175,7 +175,7 @@ CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std
     {
         for (size_t i = 0; i < Dim * 2; i++)
         {
-            size_t j = i ^ 1;
+            const size_t j = i ^ 1;
             if (a.adjacent[i] == &b && b.adjacent[j] == &a)
             {
                 return i & 1 ? rules[i / 2](aState, bState) : rules[i / 2](bState, aState);
@@ -195,7 +195,7 @@ CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std
     {
         for (size_t i = 0; i < Dim * 2; i++)
         {
-            size_t j = i ^ 1;
+            const size_t j = i ^ 1;
             if (a.adjacent[i] == &b && b.adjacent[j] == &a)
             {
                 const std::vector<Token>& availableA = tokens.at(aState)[i];
@@ -235,11 +235,11 @@ size_t CartesianTopology<Dim, State>::getIndex(const Vec<Dim>& coord) const
         coord.begin(),
         coord.end(),
         this->size.begin(),
-        0,
+        (size_t)0,
         std::plus<size_t>(),
         [&accum](size_t coord_val, size_t size_val) -> size_t
         {
-            size_t result = coord_val * accum;
+            const size_t result = coord_val * accum;
             accum *= size_val;
             return result;
         });
@@ -255,7 +255,7 @@ Vec<Dim> CartesianTopology<Dim, State>::getCoord(size_t index) const
         coords.begin(),
         [&index](size_t d) -> size_t
         {
-            size_t coord = index % d;
+            const size_t coord = index % d;
             index /= d;
             return coord;
         });

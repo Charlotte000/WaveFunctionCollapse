@@ -133,7 +133,7 @@ void Topology<State>::collapse(unsigned int seed)
     while (!this->isCollapsed())
     {
         Node<State>* node = this->getMinEntropy(randGen);
-        State* state = this->getState(*node, randGen);
+        const State* state = this->getState(*node, randGen);
         this->collapseNode(*node, *state);
     }
 }
@@ -180,10 +180,9 @@ template <class State>
 Node<State>* Topology<State>::getMinEntropy(std::mt19937& randGen)
 {
     size_t minEntropy = -1;
-    for (size_t i = 0; i < this->nodes.size(); i++)
+    for (const Node<State>& node : this->nodes)
     {
-        size_t entropy = this->nodes[i].states.size();
-        if (entropy < minEntropy && entropy != 1)
+        if (const size_t entropy = node.states.size(); entropy < minEntropy && entropy != 1)
         {
             minEntropy = entropy;
         }
@@ -205,7 +204,7 @@ template <class State>
 void Topology<State>::propagate(Node<State>& node)
 {
     std::queue<Node<State>*> queue({ &node });
-    std::vector<Node<State>*> visited({ &node });
+    std::vector<const Node<State>*> visited { &node };
     visited.reserve(this->nodes.size());
     while (!queue.empty())
     {
@@ -235,7 +234,7 @@ bool Topology<State>::reduceStates(Node<State>& a)
         std::back_inserter(newStates),
         [this, &a](const State& aState) -> bool { return this->isPlaceable(a, aState); });
 
-    bool changed = newStates.size() != a.states.size();
+    const bool changed = newStates.size() != a.states.size();
     a.states = newStates;
     if (newStates.empty())
     {
@@ -252,7 +251,7 @@ State* Topology<State>::getState(Node<State>& a, std::mt19937& randGen) const
     std::vector<double> aWeights;
     for (State& aState : a.states)
     {
-        float aWeight = this->weights.find(aState) != this->weights.end() ? this->weights.at(aState) : 1;
+        const float aWeight = this->weights.find(aState) != this->weights.end() ? this->weights.at(aState) : 1;
         if (aWeight > 0 && this->isPlaceable(a, aState))
         {
             aStates.push_back(&aState);
@@ -260,7 +259,7 @@ State* Topology<State>::getState(Node<State>& a, std::mt19937& randGen) const
         }
     }
 
-    if (aStates.size() == 0)
+    if (aStates.empty())
     {
         throw std::runtime_error("No valid states");
     }

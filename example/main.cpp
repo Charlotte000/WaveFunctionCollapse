@@ -1,5 +1,6 @@
 #include "CartesianTopology.h"
 
+#include <chrono>
 #include <iostream>
 
 template <size_t Dim, class State>
@@ -203,11 +204,40 @@ struct std::hash<CustomState>
     }
 };
 
-void exampleCustonState()
+void exampleCustomState()
 {
     WFC::CartesianTopology<2, CustomState> topology({ 10, 10 }, std::vector<CustomState>{ { 0 }, { 1 }, { 2 } });
     topology.collapseNode(topology.getNode({ 5, 5 }), { 1 });
     topology.collapse();
+}
+
+void benchmark()
+{
+    // Create topology
+    const std::unordered_map<char, std::array<std::vector<bool>, 4>> tokens
+    {
+        //                                l,     r,     u,     d
+        { char(' '), { std::vector<bool>{ 0 }, { 0 }, { 0 }, { 0 } } }, // ' '
+        { char(179), { std::vector<bool>{ 0 }, { 0 }, { 1 }, { 1 } } }, // │
+        { char(191), { std::vector<bool>{ 1 }, { 0 }, { 0 }, { 1 } } }, // ┐
+        { char(192), { std::vector<bool>{ 0 }, { 1 }, { 1 }, { 0 } } }, // └
+        { char(196), { std::vector<bool>{ 1 }, { 1 }, { 0 }, { 0 } } }, // ─
+        { char(197), { std::vector<bool>{ 1 }, { 1 }, { 1 }, { 1 } } }, // ┼
+        { char(217), { std::vector<bool>{ 1 }, { 0 }, { 1 }, { 0 } } }, // ┘
+        { char(218), { std::vector<bool>{ 0 }, { 1 }, { 0 }, { 1 } } }, // ┌
+    };
+
+    for (size_t size = 16; size <= 512; size *= 2)
+    {
+        WFC::CartesianTopology<2, char> topology = WFC::CartesianTopology<2, char>({ size, size }, tokens);
+        topology.weights[' '] = 20;
+
+        auto start = std::chrono::high_resolution_clock::now();
+        topology.collapse(42);
+        auto end = std::chrono::high_resolution_clock::now();
+        int64_t elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        std::cout << '[' << size << 'x' << size << "] " << elapsed << " ms" << std::endl;
+    }
 }
 
 int main()
@@ -215,6 +245,7 @@ int main()
     examplePipes();
     exampleSudoku();
     exampleRules();
-    exampleCustonState();
+    exampleCustomState();
+    // benchmark();
     return 0;
 }
