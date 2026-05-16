@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <functional>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace WFC
 {
@@ -38,6 +39,16 @@ struct Node
      * @brief The adjacent nodes are the nodes that are connected to the current node.
      */
     std::vector<Node<State>*> adjacent;
+
+    /**
+     * @brief Check if the node is collapsed, meaning it has an entropy of 1.
+     */
+    bool isCollapsed() const;
+
+    /**
+     * @brief Get the entropy of the node, which is the number of possible states.
+     */
+    size_t entropy() const;
 };
 
 /**
@@ -89,7 +100,7 @@ public:
      * @brief Collapse a node with a specific state.
      * @param node The node to collapse.
      * @param state The state to collapse the node with.
-     * @throw std::logic_error If the state is not valid.
+     * @throw std::invalid_argument If the state is not valid.
      */
     void collapseNode(Node<State>& node, const State& state);
 
@@ -111,16 +122,24 @@ private:
 };
 
 template <class State>
+bool Node<State>::isCollapsed() const
+{
+    return this->entropy() == 1;
+}
+
+template <class State>
+size_t Node<State>::entropy() const
+{
+    return this->states.size();
+}
+
+template <class State>
 Topology<State>::Topology(const Topology<State>& topology)
 {
     this->nodes = topology.nodes;
     for (Node<State>& node : this->nodes)
-    {
         for (Node<State>*& adj : node.adjacent)
-        {
             adj = adj == nullptr ? nullptr : &this->nodes[adj - topology.nodes.data()];
-        }
-    }
 
     this->weights = topology.weights;
     this->compatible = topology.compatible;
@@ -143,9 +162,7 @@ void Topology<State>::collapseNode(Node<State>& node, const State& state)
 {
     auto it = std::find(node.states.begin(), node.states.end(), state);
     if (it == node.states.end())
-    {
-        throw std::logic_error("Invalid state to collapse");
-    }
+        throw std::invalid_argument("Invalid state to collapse");
 
     node.states = { *it };
     this->propagate(node);
@@ -159,13 +176,13 @@ bool Topology<State>::isCorrect() const
         this->nodes.end(),
         [this](const Node<State>& a) -> bool
         {
-            return a.states.size() == 1 &&
+            return a.isCollapsed() &&
                 std::all_of(
                     a.adjacent.begin(),
                     a.adjacent.end(),
                     [this, &a](const Node<State>* b) -> bool
                     {
-                        return b == nullptr || b->states.size() == 1 && this->compatible(a, a.states.at(0), *b, b->states.at(0));
+                        return b == nullptr || b->isCollapsed() && this->compatible(a, a.states.at(0), *b, b->states.at(0));
                     });
         });
 }
@@ -173,7 +190,7 @@ bool Topology<State>::isCorrect() const
 template <class State>
 bool Topology<State>::isCollapsed() const
 {
-    return std::all_of(this->nodes.begin(), this->nodes.end(), [](const Node<State>& node) -> bool { return node.states.size() == 1; });
+    return std::all_of(this->nodes.begin(), this->nodes.end(), [](const Node<State>& node) -> bool { return node.isCollapsed(); });
 }
 
 template <class State>
@@ -181,21 +198,13 @@ Node<State>* Topology<State>::getMinEntropy(std::mt19937& randGen)
 {
     size_t minEntropy = -1;
     for (const Node<State>& node : this->nodes)
-    {
-        if (const size_t entropy = node.states.size(); entropy < minEntropy && entropy != 1)
-        {
+        if (const size_t entropy = node.entropy(); !node.isCollapsed() && entropy < minEntropy)
             minEntropy = entropy;
-        }
-    }
 
     std::vector<Node<State>*> minNodes;
     for (Node<State>& node : this->nodes)
-    {
-        if (node.states.size() == minEntropy)
-        {
+        if (node.entropy() == minEntropy)
             minNodes.push_back(&node);
-        }
-    }
 
     return minNodes[randGen() % minNodes.size()];
 }
@@ -204,7 +213,7 @@ template <class State>
 void Topology<State>::propagate(Node<State>& node)
 {
     std::queue<Node<State>*> queue({ &node });
-    std::vector<const Node<State>*> visited { &node };
+    std::unordered_set<const Node<State>*> visited { &node };
     visited.reserve(this->nodes.size());
     while (!queue.empty())
     {
@@ -214,11 +223,11 @@ void Topology<State>::propagate(Node<State>& node)
         for (Node<State>* neighbour : current->adjacent)
         {
             if (neighbour != nullptr &&
-                std::find(visited.begin(), visited.end(), neighbour) == visited.end() &&
+                visited.find(neighbour) == visited.end() &&
                 this->reduceStates(*neighbour))
             {
                 queue.push(neighbour);
-                visited.push_back(neighbour);
+                visited.insert(neighbour);
             }
         }
     }
@@ -233,13 +242,11 @@ bool Topology<State>::reduceStates(Node<State>& a)
         a.states.end(),
         std::back_inserter(newStates),
         [this, &a](const State& aState) -> bool { return this->isPlaceable(a, aState); });
+    if (newStates.empty())
+        throw std::runtime_error("No valid states");
 
     const bool changed = newStates.size() != a.states.size();
     a.states = newStates;
-    if (newStates.empty())
-    {
-        throw std::runtime_error("No valid states");
-    }
 
     return changed;
 }
@@ -260,9 +267,7 @@ State* Topology<State>::getState(Node<State>& a, std::mt19937& randGen) const
     }
 
     if (aStates.empty())
-    {
         throw std::runtime_error("No valid states");
-    }
 
     std::discrete_distribution<size_t> randState(aWeights.begin(), aWeights.end());
     return aStates[randState(randGen)];

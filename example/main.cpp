@@ -108,7 +108,7 @@ void exampleSudoku()
     topology.compatible = [](const WFC::Node<int>&, const int& aState, const WFC::Node<int>&, const int& bState) { return aState != bState; };
 
     // Collapse known cells
-    const std::array<int, 9 * 9> field =
+    const std::array<int, 9 * 9> field
     {
         0,0,0,  0,0,0,  0,0,0,
         0,0,0,  0,0,0,  0,0,0,
@@ -229,7 +229,7 @@ void benchmark()
 
     for (size_t size = 16; size <= 512; size *= 2)
     {
-        WFC::CartesianTopology<2, char> topology = WFC::CartesianTopology<2, char>({ size, size }, tokens);
+        WFC::CartesianTopology<2, char> topology({ size, size }, tokens);
         topology.weights[' '] = 20;
 
         auto start = std::chrono::high_resolution_clock::now();

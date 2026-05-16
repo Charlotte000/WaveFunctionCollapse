@@ -177,9 +177,7 @@ CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std
         {
             const size_t j = i ^ 1;
             if (a.adjacent[i] == &b && b.adjacent[j] == &a)
-            {
                 return i & 1 ? rules[i / 2](aState, bState) : rules[i / 2](bState, aState);
-            }
         }
 
         return false;
@@ -200,14 +198,20 @@ CartesianTopology<Dim, State>::CartesianTopology(const Vec<Dim>& size, const std
             {
                 const std::vector<Token>& availableA = tokens.at(aState)[i];
                 const std::vector<Token>& availableB = tokens.at(bState)[j];
-                return std::any_of(availableB.begin(), availableB.end(), [&availableA](const Token& b) -> bool
-                {
-                    return std::find(availableA.begin(), availableA.end(), b) != availableA.end();
-                }) &&
-                std::any_of(availableA.begin(), availableA.end(), [&availableB](const Token& a) -> bool
-                {
-                    return std::find(availableB.begin(), availableB.end(), a) != availableB.end();
-                });
+                return std::any_of(
+                    availableB.begin(),
+                    availableB.end(),
+                    [&availableA](const Token& b) -> bool
+                    {
+                        return std::find(availableA.begin(), availableA.end(), b) != availableA.end();
+                    }) &&
+                    std::any_of(
+                        availableA.begin(),
+                        availableA.end(),
+                        [&availableB](const Token& a) -> bool
+                        {
+                            return std::find(availableB.begin(), availableB.end(), a) != availableB.end();
+                        });
             }
         }
 
